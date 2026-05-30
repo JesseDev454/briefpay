@@ -1,0 +1,27 @@
+{
+  "name": "briefpay",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @briefpay/shared && npm run build -w @briefpay/api && npm run build -w @briefpay/web",
+    "dev": "npm-run-all --parallel dev:api dev:web",
+    "dev:api": "npm run dev -w @briefpay/api",
+    "dev:web": "npm run dev -w @briefpay/web",
+    "lint": "npm run lint -w @briefpay/shared && npm run lint -w @briefpay/api && npm run lint -w @briefpay/web",
+    "test": "npm run test -w @briefpay/api && npm run test -w @briefpay/web",
+    "typecheck": "npm run build -w @briefpay/shared && npm run typecheck -w @briefpay/api && npm run typecheck -w @briefpay/web",
+    "migration:run": "npm run migration:run -w @briefpay/api",
+    "migration:revert": "npm run migration:revert -w @briefpay/api",
+    "seed": "npm run seed -w @briefpay/api"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.22.0",
+    "eslint": "^9.22.0",
+    "npm-run-all": "^4.1.5"
+    ,"typescript-eslint": "^8.26.0"
+  }
+}
