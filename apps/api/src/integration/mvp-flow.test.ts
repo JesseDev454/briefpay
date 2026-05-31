@@ -234,4 +234,23 @@ describe("BriefPay MVP integration flow", () => {
     expect(dashboard.body.data.totalPaidByCurrency).toEqual([{ currency: "NGN", amount: "60000.00" }]);
     expect(dashboard.body.data.acceptedProposalsCount).toBe(1);
   });
+
+  it("keeps existing proposals and invoices after a workspace settings update", async () => {
+    await owner.agent.patch(`${api}/settings/workspace`).set(bearer(owner)).send({
+      businessName: "Owner Studio Updated",
+      profession: "Designer",
+      defaultCurrency: "NGN",
+      brandColor: "#2962FF",
+      whatsappNumber: "+2348012345678",
+      paymentInstructions: "Transfer to the account below, then submit your confirmation.",
+      bankDetails: { bankName: "Example Bank", accountName: "Owner Freelancer", accountNumber: "0123456789" },
+      foreignAccountDetails: {},
+      paymentLinks: [],
+    }).expect(200);
+
+    const proposals = await owner.agent.get(`${api}/proposals`).set(bearer(owner)).expect(200);
+    const payments = await owner.agent.get(`${api}/payment-requests`).set(bearer(owner)).expect(200);
+    expect(proposals.body.data.items.some((proposal: { id: string }) => proposal.id === proposalId)).toBe(true);
+    expect(payments.body.data.items.some((payment: { id: string }) => payment.id === paymentRequestId)).toBe(true);
+  });
 });
