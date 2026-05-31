@@ -56,7 +56,7 @@ Expected result: only public-safe data is shown.
 ### Flow 5: Payment Confirmation
 1. Client opens payment request page.
 2. Client fills required payment confirmation fields.
-3. Receipt upload is optional.
+3. Receipt upload is required.
 4. Client submits form.
 5. Payment request status becomes `awaiting_verification`.
 
@@ -178,8 +178,8 @@ Before deployment:
 - [ ] Public proposal looks good on mobile.
 - [ ] Accept proposal works.
 - [ ] Payment instruction page works.
-- [ ] Payment confirmation form works without receipt.
-- [ ] Payment confirmation form works with receipt.
+- [ ] Payment confirmation form blocks submission without a receipt.
+- [ ] Payment confirmation form works with a JPG, PNG, or PDF receipt.
 - [ ] Freelancer can verify payment.
 - [ ] Dashboard metrics update.
 - [ ] Settings save correctly.

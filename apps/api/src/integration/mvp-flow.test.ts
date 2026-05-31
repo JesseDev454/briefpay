@@ -1,4 +1,6 @@
 import { randomUUID } from "node:crypto";
+import { rm } from "node:fs/promises";
+import path from "node:path";
 import request from "supertest";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Express } from "express";
@@ -81,6 +83,8 @@ describe("BriefPay MVP integration flow", () => {
 
   afterAll(async () => {
     if (!dataSource?.isInitialized) return;
+    const files = await dataSource.query<Array<{ storage_key: string }>>("SELECT storage_key FROM files WHERE workspace_id = ANY($1::uuid[])", [[owner.workspaceId, outsider.workspaceId]]);
+    await Promise.all(files.map((file) => rm(path.resolve(process.cwd(), process.env.UPLOAD_DIR || "uploads", file.storage_key), { force: true })));
     await dataSource.query("DELETE FROM workspaces WHERE id = ANY($1::uuid[])", [[owner.workspaceId, outsider.workspaceId]]);
     await dataSource.query("DELETE FROM users WHERE id = ANY($1::uuid[])", [[owner.userId, outsider.userId]]);
     await dataSource.destroy();
@@ -205,10 +209,14 @@ describe("BriefPay MVP integration flow", () => {
       paymentMethod: "Bank Transfer",
       amountPaid: 60000,
       currency: "NGN",
-      transactionReference: `REF-${suffix}`,
     };
-    await request(app).post(`${api}/public/payment/${paymentToken}/confirm`).send(confirmation).expect(200);
-    await request(app).post(`${api}/public/payment/${paymentToken}/confirm`).send(confirmation).expect(409);
+    await request(app).post(`${api}/public/payment/${paymentToken}/confirm`).send(confirmation).expect(400);
+    const receipt = await request(app).post(`${api}/public/payment/${paymentToken}/files/upload`)
+      .attach("file", Buffer.from("receipt image bytes"), { filename: "receipt.png", contentType: "image/png" })
+      .expect(201);
+    const confirmationWithReceipt = { ...confirmation, receiptFileId: receipt.body.data.id };
+    await request(app).post(`${api}/public/payment/${paymentToken}/confirm`).send(confirmationWithReceipt).expect(200);
+    await request(app).post(`${api}/public/payment/${paymentToken}/confirm`).send(confirmationWithReceipt).expect(409);
 
     const awaiting = await owner.agent.get(`${api}/dashboard/summary`).set(bearer(owner)).expect(200);
     expect(awaiting.body.data.awaitingVerificationCount).toBe(1);
@@ -217,8 +225,7 @@ describe("BriefPay MVP integration flow", () => {
     await outsider.agent.post(`${api}/payment-requests/${paymentRequestId}/verify`).set(bearer(outsider)).expect(404);
     await owner.agent.post(`${api}/payment-requests/${paymentRequestId}/reject`).set(bearer(owner)).expect(200);
     await request(app).post(`${api}/public/payment/${paymentToken}/confirm`).send({
-      ...confirmation,
-      transactionReference: `REF-RESUBMIT-${suffix}`,
+      ...confirmationWithReceipt,
     }).expect(200);
     await owner.agent.post(`${api}/payment-requests/${paymentRequestId}/verify`).set(bearer(owner)).expect(200);
 

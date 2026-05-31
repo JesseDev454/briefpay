@@ -13,7 +13,7 @@
 
 BriefPay is a freelancer back-office SaaS that helps freelancers move from client brief to proposal acceptance to payment tracking in one clean workflow.
 
-BriefPay does **not** process payments directly in the MVP. It helps freelancers create professional proposals, send public proposal links, request deposits, show payment instructions, collect optional proof of payment, and manually verify payments.
+BriefPay does **not** process payments directly in the MVP. It helps freelancers create professional proposals, send public proposal links, request deposits, show payment instructions, collect proof of payment, and manually verify payments.
 
 ### One-Line Pitch
 BriefPay helps freelancers send proposals, request deposits, and track client payments without juggling Google Docs, WhatsApp, Excel, and invoice tools.
@@ -82,7 +82,7 @@ BriefPay solves this by combining proposal creation, public client approval, pay
 - Proposal acceptance by client
 - Deposit/payment request display
 - Manual payment confirmation form
-- Optional receipt upload
+- Required receipt upload for payment confirmation
 - Freelancer manual payment verification
 - Dashboard summary
 - Basic email notifications or placeholders for later integration
@@ -160,8 +160,8 @@ Clients must be able to submit payment confirmation using:
 - Client name
 - Payment method
 - Amount paid
-- Transaction reference or note
-- Optional receipt upload
+- Optional transaction reference or note
+- Required receipt upload
 
 ### FR-013: Manual Payment Verification
 Freelancers must be able to mark submitted payments as verified or rejected.
@@ -258,7 +258,7 @@ Users must be able to update:
 6. Client opens public proposal link.
 7. Client accepts proposal.
 8. Client views deposit/payment request.
-9. Client submits payment confirmation and optional receipt.
+9. Client submits payment confirmation with a receipt.
 10. Freelancer sees status as **Awaiting Verification**.
 11. Freelancer verifies payment manually.
 12. Dashboard updates payment/proposal status.
@@ -275,7 +275,7 @@ BriefPay must not sound like it processes money directly.
 - I Have Paid
 - Payment confirmation submitted
 - Awaiting Verification
-- Payment proof optional
+- Payment receipt required
 - Mark as Verified
 
 ### Avoid

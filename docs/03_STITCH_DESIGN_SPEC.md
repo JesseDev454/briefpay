@@ -120,7 +120,7 @@ The BriefPay logo is a minimalist "flow mark" representing the transition from *
 
 ### Invoice / Deposit Page
 - **Focus:** High-visibility payment instructions (Bank Name, Account Number).
-- **Tracking Form:** "I Have Paid" button enabled only after mandatory fields (Name, Method, Amount, Ref) are filled. Receipt upload is **optional**.
+- **Tracking Form:** "I Have Paid" button enabled only after mandatory fields (Name, Method, Amount, Receipt) are filled. Payment reference is optional.
 
 ---
 

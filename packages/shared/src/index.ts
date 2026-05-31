@@ -108,9 +108,9 @@ export const paymentConfirmationSchema = z.object({
   paymentMethod: z.string().trim().min(2).max(120),
   amountPaid: moneySchema.positive(),
   currency: currencySchema,
-  transactionReference: z.string().trim().min(2).max(240),
+  transactionReference: z.string().trim().max(240).optional().default(""),
   note: z.string().trim().max(2000).optional(),
-  receiptFileId: uuidSchema.optional(),
+  receiptFileId: uuidSchema,
 });
 
 export const workspaceSettingsSchema = z.object({

@@ -20,7 +20,7 @@ The API integration suite covers:
 - Workspace-scoped client create, update, archive, read protection, and ownership protection
 - Proposal creation, ownership protection, send lifecycle, invalid public tokens, and public-safe proposal data
 - Client acceptance and exactly one automatic deposit request
-- Public payment instructions, confirmation without a receipt, duplicate-confirmation protection, rejection, resubmission, and verification
+- Public payment instructions, required receipt upload, optional payment reference, duplicate-confirmation protection, rejection, resubmission, and verification
 - Dashboard awaiting-verification, accepted-proposal, and verified-payment totals
 
 ## Manual freelancer flow
@@ -36,12 +36,13 @@ Run `npm.cmd run dev`, then use `http://localhost:5173`.
 - [ ] Open the public link in an incognito window.
 - [ ] Accept the proposal with a client name and email address.
 - [ ] Confirm that the deposit page shows the expected amount, due date, bank details, and external-payment disclaimer.
-- [ ] Submit a payment confirmation without a receipt.
+- [ ] Confirm that payment confirmation is blocked until a receipt is uploaded.
+- [ ] Upload a JPG, PNG, or PDF receipt and submit the payment confirmation without typing a payment reference.
 - [ ] Return to the freelancer invoice view and confirm that the status is `awaiting verification`.
 - [ ] Mark the confirmation as verified.
 - [ ] Confirm that the dashboard paid total updates.
 
-Repeat the confirmation flow once with a JPG, PNG, or PDF receipt during staging storage QA.
+Repeat the confirmation flow with each supported receipt format during staging storage QA.
 
 ## Browser smoke checks
 

@@ -258,9 +258,11 @@ Request:
   "currency": "NGN",
   "transactionReference": "TRX123456789",
   "note": "Paid from GTBank account",
-  "receiptFileId": "uuid-optional"
+  "receiptFileId": "uuid-required"
 }
 ```
+
+`transactionReference` is optional. `receiptFileId` is required.
 
 Response wording:
 ```json

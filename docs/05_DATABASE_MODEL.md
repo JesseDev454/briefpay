@@ -240,7 +240,7 @@ Indexes:
 | currency | varchar(3) | required |
 | transaction_reference | varchar nullable | reference or note |
 | note | text nullable | optional |
-| receipt_file_id | uuid nullable | FK files.id |
+| receipt_file_id | uuid nullable | FK files.id; required for new confirmations, nullable for legacy records |
 | submitted_at | timestamp | required |
 | verified_at | timestamp nullable | freelancer verification |
 | rejected_at | timestamp nullable | freelancer rejection |

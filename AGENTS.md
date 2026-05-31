@@ -1,7 +1,7 @@
 # AGENTS.md
 
 ## Project
-BriefPay is a SaaS back-office tool for freelancers. It helps users create proposals, send public proposal links, track client acceptance, show manual payment instructions, upload optional receipts, and track payment verification.
+BriefPay is a SaaS back-office tool for freelancers. It helps users create proposals, send public proposal links, track client acceptance, show manual payment instructions, upload payment receipts, and track payment verification.
 
 ## MVP Rule
 Build only the MVP. Do not add payment processor integrations, AI proposal generation, chat, marketplace features, advanced analytics, multi-team agency roles, or mobile apps unless explicitly requested.
@@ -50,7 +50,7 @@ Follow the Stitch design direction:
 2. Dashboard: proposal stats, payment status summary, recent proposals.
 3. Proposal builder: create proposal with client info, project title, scope, deliverables, timeline, amount, currency, deposit amount, payment instructions.
 4. Public proposal link: client can view proposal and accept it.
-5. Manual payment tracking: client sees payment instructions and can optionally upload receipt.
+5. Manual payment tracking: client sees payment instructions and uploads a receipt for freelancer review.
 6. Freelancer can mark payment as verified.
 7. Settings: freelancer profile, business name, bank/payment details, default currency.
 

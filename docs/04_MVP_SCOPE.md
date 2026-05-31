@@ -67,7 +67,7 @@ Build the smallest useful version of BriefPay that allows a freelancer to:
 - Show payment instructions
 - Copy payment details
 - Client submits payment confirmation
-- Optional receipt upload
+- Required receipt upload for payment confirmation
 
 ### Dashboard
 - Active proposals
@@ -141,7 +141,7 @@ The MVP is done when this full flow works:
 6. Client opens the proposal link on mobile.
 7. Client accepts proposal.
 8. Client views payment instructions.
-9. Client submits payment confirmation and optional receipt.
+9. Client submits payment confirmation with a receipt.
 10. Freelancer sees **Awaiting Verification**.
 11. Freelancer marks payment as **Paid**.
 12. Dashboard updates correctly.
