@@ -46,7 +46,7 @@ export const clientSchema = z.object({
 export const lineItemSchema = z.object({
   description: z.string().trim().min(1).max(240),
   quantity: z.coerce.number().positive(),
-  rate: moneySchema,
+  rate: moneySchema.positive(),
 });
 
 export const proposalContentSchema = z.object({
@@ -64,11 +64,26 @@ export const proposalSchema = z.object({
   title: z.string().trim().min(2).max(200),
   currency: currencySchema,
   content: proposalContentSchema,
-  depositAmount: moneySchema.optional(),
-  depositPercent: z.coerce.number().min(0).max(100).optional(),
+  depositAmount: moneySchema.positive().optional(),
+  depositPercent: z.coerce.number().positive().max(100).optional(),
   paymentDueDate: z.string().date().optional().or(z.literal("")),
-}).refine((value) => !(value.depositAmount !== undefined && value.depositPercent !== undefined), {
-  message: "Choose a deposit amount or percentage, not both",
+}).superRefine((value, ctx) => {
+  if (value.depositAmount !== undefined && value.depositPercent !== undefined) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Choose a deposit amount or percentage, not both",
+      path: ["depositAmount"],
+    });
+  }
+
+  const total = value.content.lineItems.reduce((sum, item) => sum + item.quantity * item.rate, 0);
+  if (value.depositAmount !== undefined && value.depositAmount > total) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Deposit amount cannot exceed the proposal total",
+      path: ["depositAmount"],
+    });
+  }
 });
 
 export const proposalResponseSchema = z.object({

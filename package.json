@@ -12,7 +12,7 @@
     "dev:api": "npm run dev -w @briefpay/api",
     "dev:web": "npm run dev -w @briefpay/web",
     "lint": "npm run lint -w @briefpay/shared && npm run lint -w @briefpay/api && npm run lint -w @briefpay/web",
-    "test": "npm run test -w @briefpay/api && npm run test -w @briefpay/web",
+    "test": "npm run build -w @briefpay/shared && npm run test -w @briefpay/api && npm run test -w @briefpay/web",
     "typecheck": "npm run build -w @briefpay/shared && npm run typecheck -w @briefpay/api && npm run typecheck -w @briefpay/web",
     "migration:run": "npm run migration:run -w @briefpay/api",
     "migration:revert": "npm run migration:revert -w @briefpay/api",
