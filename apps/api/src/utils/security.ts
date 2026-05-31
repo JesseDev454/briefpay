@@ -12,7 +12,7 @@ export const signAccessToken = (payload: AccessPayload) =>
   jwt.sign(payload, env.JWT_ACCESS_SECRET, { expiresIn: env.ACCESS_TOKEN_TTL as SignOptions["expiresIn"] });
 
 export const signRefreshToken = (payload: Pick<AccessPayload, "userId">) =>
-  jwt.sign(payload, env.JWT_REFRESH_SECRET, { expiresIn: `${env.REFRESH_TOKEN_TTL_DAYS}d` });
+  jwt.sign(payload, env.JWT_REFRESH_SECRET, { expiresIn: `${env.REFRESH_TOKEN_TTL_DAYS}d`, jwtid: randomBytes(16).toString("base64url") });
 
 export const verifyAccessToken = (token: string) => jwt.verify(token, env.JWT_ACCESS_SECRET) as AccessPayload;
 export const verifyRefreshToken = (token: string) => jwt.verify(token, env.JWT_REFRESH_SECRET) as Pick<AccessPayload, "userId">;

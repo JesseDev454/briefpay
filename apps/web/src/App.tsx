@@ -1,29 +1,16 @@
 import { FormEvent, ReactNode, createContext, useContext, useEffect, useState } from "react";
 import { Link, NavLink, Navigate, Route, Routes, useNavigate, useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowRight, CheckCircle2, ClipboardCopy, FileText, Gauge, LogOut, Menu, Plus, ReceiptText, Save, Settings, Trash2, Users, X } from "lucide-react";
+import { ArrowRight, CheckCircle2, ClipboardCopy, FileText, Gauge, LogOut, Menu, Plus, ReceiptText, Save, Settings, Users, X } from "lucide-react";
 import { api, setAccessToken, uploadFile } from "./lib/api";
-
-type Session = { user: { id: string; fullName: string; email: string }; workspace: Workspace };
-type Workspace = { id: string; name: string; profession: string; defaultCurrency: string; brandColor: string; whatsappNumber?: string; paymentInstructions?: string; bankDetails: Record<string,string>; foreignAccountDetails: Record<string,string>; paymentLinks: Array<{label:string;url:string}>; logoFileId?:string };
-type Client = { id:string; name:string; email?:string; phone?:string; companyName?:string; notes?:string };
-type Proposal = { id:string; title:string; status:string; clientId:string; currency:string; totalAmount:string; depositAmount?:string; depositPercent?:string; paymentDueDate?:string; currentVersion?:{contentJson:ProposalContent}; client?:Client };
-type ProposalContent = { problemSummary:string; proposedSolution:string; deliverables:string[]; timeline:string; lineItems:Array<{description:string;quantity:number;rate:number}>; paymentTerms:string; callToAction:string };
-type Invoice = { id:string;title:string;amount:string;currency:string;dueDate?:string;status:string;instructions:string;proposalId:string;proposal?:{title:string;totalAmount:string};client?:Client;confirmations?:Array<{id:string;clientName:string;paymentMethod:string;amountPaid:string;transactionReference:string;note?:string;receiptFileId?:string;submittedAt:string}> };
+import { Area, Badge, Brand, Button, Empty, Field } from "./components/ui";
+import { ProposalForm } from "./features/proposals/ProposalForm";
+import { currency } from "./lib/format";
+import { request } from "./lib/request";
+import { Client, Invoice, Proposal, ProposalContent, Session, Workspace } from "./types";
 
 const AuthContext = createContext<{session:Session|null; booting:boolean; login:(data:{accessToken:string;user:Session["user"];workspace:Workspace})=>void; logout:()=>Promise<void>}>({session:null,booting:true,login:()=>{},logout:async()=>{}});
 const useAuth = () => useContext(AuthContext);
-const currency = (amount:string|number|undefined, code="NGN") => new Intl.NumberFormat("en-NG",{style:"currency",currency:code,maximumFractionDigits:0}).format(Number(amount||0));
-const request = <T,>(path:string, options?:RequestInit) => api<{data:T}>(path, options).then((value)=>value.data);
-
-function Brand({inverse=false}:{inverse?:boolean}) { return <Link to="/" className={`flex items-center gap-2 text-xl font-black tracking-tight ${inverse?"text-white":"text-slate-900"}`}><span className="grid h-9 w-9 place-items-center rounded-lg bg-primary text-white">B</span>BriefPay</Link>; }
-function Button({children,variant="primary",className="",...props}:React.ButtonHTMLAttributes<HTMLButtonElement>&{variant?:"primary"|"secondary"|"ghost"}) { return <button className={`btn btn-${variant} ${className}`} {...props}>{children}</button>; }
-function Badge({value}:{value:string}) { return <span className={`badge badge-${value}`}>{value.replaceAll("_"," ")}</span>; }
-function Help({children}:{children:ReactNode}) { return <p className="muted -mt-1 mb-2 text-xs leading-5">{children}</p>; }
-function Field({label,hint,...props}:React.InputHTMLAttributes<HTMLInputElement>&{label:string;hint?:string}) { return <label><span className="label">{label}</span>{hint&&<Help>{hint}</Help>}<input className="field" {...props}/></label>; }
-function Area({label,hint,...props}:React.TextareaHTMLAttributes<HTMLTextAreaElement>&{label:string;hint?:string}) { return <label><span className="label">{label}</span>{hint&&<Help>{hint}</Help>}<textarea className="field min-h-24 resize-y" {...props}/></label>; }
-function Empty({title,copy,action}:{title:string;copy:string;action?:ReactNode}) { return <div className="card p-10 text-center"><FileText className="mx-auto mb-3 text-slate-300"/><h3 className="font-bold">{title}</h3><p className="muted mx-auto max-w-md">{copy}</p>{action}</div>; }
-
 function AuthProvider({children}:{children:ReactNode}) {
   const [session,setSession]=useState<Session|null>(null), [booting,setBooting]=useState(true);
   const login=(data:{accessToken:string;user:Session["user"];workspace:Workspace})=>{setAccessToken(data.accessToken);setSession({user:data.user,workspace:data.workspace});};
@@ -49,62 +36,6 @@ function Clients() { const query=useQuery({queryKey:["clients"],queryFn:()=>requ
 function ClientForm({editing=false}:{editing?:boolean}) { const {id}=useParams(),nav=useNavigate(),qc=useQueryClient(); const existing=useQuery({queryKey:["client",id],queryFn:()=>request<Client>(`/clients/${id}`),enabled:editing}); const [form,setForm]=useState({name:"",email:"",phone:"",companyName:"",notes:""}); useEffect(()=>{if(existing.data)setForm({...form,...existing.data})},[existing.data]); const submit=async(e:FormEvent)=>{e.preventDefault();await api(editing?`/clients/${id}`:"/clients",{method:editing?"PATCH":"POST",body:JSON.stringify(form)});await qc.invalidateQueries({queryKey:["clients"]});nav("/clients")}; return <form onSubmit={submit} className="max-w-2xl"><h1 className="page-title">{editing?"Client details":"Add client"}</h1><div className="card mt-7 space-y-4 p-6">{(["name","email","phone","companyName"] as const).map(key=><Field key={key} label={key==="companyName"?"Company name":key[0].toUpperCase()+key.slice(1)} value={form[key]||""} onChange={e=>setForm({...form,[key]:e.target.value})} required={key==="name"}/>)}<Area label="Notes" value={form.notes||""} onChange={e=>setForm({...form,notes:e.target.value})}/><Button type="submit"><Save size={17}/>Save client</Button></div></form>; }
 
 function Proposals() { const {data}=useQuery({queryKey:["proposals"],queryFn:()=>request<{items:Proposal[]}>("/proposals")}); return <><div className="mb-8 flex justify-between"><div><h1 className="page-title">Proposals</h1><p className="muted mt-2">Draft, send, and monitor client decisions.</p></div><Link className="btn btn-primary" to="/proposals/new"><Plus size={17}/>New proposal</Link></div>{!data?.items.length?<Empty title="No proposals yet" copy="Create a client-ready proposal and share a secure public link."/>:<div className="card table-wrap"><table><thead><tr><th>Proposal</th><th>Status</th><th>Total</th><th></th></tr></thead><tbody>{data.items.map(item=><tr key={item.id}><td className="font-bold">{item.title}</td><td><Badge value={item.status}/></td><td>{currency(item.totalAmount,item.currency)}</td><td><Link className="font-bold text-primary" to={`/proposals/${item.id}`}>View</Link></td></tr>)}</tbody></table></div>}</>; }
-const emptyContent:ProposalContent={problemSummary:"",proposedSolution:"",deliverables:[""],timeline:"",lineItems:[{description:"",quantity:1,rate:0}],paymentTerms:"50% deposit before work begins.",callToAction:"Accept Proposal"};
-function ProposalForm({editing=false}:{editing?:boolean}) {
- const {id}=useParams(),nav=useNavigate();
- const clients=useQuery({queryKey:["clients"],queryFn:()=>request<{items:Client[]}>("/clients")});
- const existing=useQuery({queryKey:["proposal",id],queryFn:()=>request<Proposal>(`/proposals/${id}`),enabled:editing});
- const [form,setForm]=useState({clientId:"",title:"",currency:"NGN",depositAmount:"",depositPercent:"",paymentDueDate:"",content:emptyContent});
- const [error,setError]=useState("");
- useEffect(()=>{if(existing.data)setForm({clientId:existing.data.clientId,title:existing.data.title,currency:existing.data.currency,depositAmount:existing.data.depositAmount||"",depositPercent:existing.data.depositPercent||"",paymentDueDate:existing.data.paymentDueDate||"",content:existing.data.currentVersion!.contentJson})},[existing.data]);
- const content=(key:keyof ProposalContent,value:unknown)=>setForm({...form,content:{...form.content,[key]:value}});
- const total=form.content.lineItems.reduce((sum,item)=>sum+Number(item.quantity)*Number(item.rate),0);
- const depositAmount=Number(form.depositAmount||0);
- const pricingError=total<=0?"Add a unit price above zero to calculate the proposal total.":depositAmount>total?"Deposit amount cannot be greater than the proposal total.":"";
- const updateLine=(index:number,values:Partial<ProposalContent["lineItems"][number]>)=>content("lineItems",form.content.lineItems.map((line,i)=>i===index?{...line,...values}:line));
- const submit=async(e:FormEvent)=>{e.preventDefault();if(pricingError){setError(pricingError);return}setError("");try{const body={...form,depositAmount:form.depositAmount?Number(form.depositAmount):undefined,depositPercent:form.depositPercent?Number(form.depositPercent):undefined};const result=await request<Proposal>(editing?`/proposals/${id}`:"/proposals",{method:editing?"PATCH":"POST",body:JSON.stringify(body)});nav(`/proposals/${result.id}`)}catch(submitError){setError(submitError instanceof Error?submitError.message:"Could not save the proposal.")}};
- return <form onSubmit={submit}>
-  <div className="mb-7"><h1 className="page-title">{editing?"Edit proposal":"Create proposal"}</h1><p className="muted mt-2">Build a clear proposal and define external deposit instructions.</p></div>
-  <div className="grid gap-6 xl:grid-cols-[1fr_300px]">
-   <div className="card space-y-5 p-6">
-    <label><span className="label">Client</span><Help>Select the person or business receiving this proposal.</Help><select className="field" required value={form.clientId} onChange={e=>setForm({...form,clientId:e.target.value})}><option value="">Choose a client</option>{clients.data?.items.map(client=><option key={client.id} value={client.id}>{client.name}</option>)}</select></label>
-    <Field hint="Use a short, recognizable project name. Your client will see this at the top of the proposal." label="Proposal title" value={form.title} onChange={e=>setForm({...form,title:e.target.value})} required/>
-    <Area hint="Describe the client's current challenge in a few clear sentences." label="Problem summary" value={form.content.problemSummary} onChange={e=>content("problemSummary",e.target.value)} required/>
-    <Area hint="Explain how your work will solve the problem and what approach you recommend." label="Proposed solution" value={form.content.proposedSolution} onChange={e=>content("proposedSolution",e.target.value)} required/>
-    <Area hint="List the specific outcomes the client will receive. Put each deliverable on its own line." label="Deliverables (one per line)" value={form.content.deliverables.join("\n")} onChange={e=>content("deliverables",e.target.value.split("\n"))} required/>
-    <Field hint="Tell the client how long the project should take, such as 3 weeks or May 1 to May 21." label="Timeline" value={form.content.timeline} onChange={e=>content("timeline",e.target.value)} required/>
-    <div>
-     <span className="label">Line items</span>
-     <p className="muted mb-3 text-sm">Add each service and its price. The proposal total is quantity x unit price.</p>
-     <div className="overflow-x-auto">
-      <div className="min-w-[650px]">
-       <div className="mb-2 grid grid-cols-[1fr_70px_120px_120px_42px] gap-2 px-1 text-xs font-bold uppercase tracking-wide text-slate-500"><span>Service</span><span>Qty</span><span>Unit price</span><span>Subtotal</span><span/></div>
-       {form.content.lineItems.map((item,index)=><div className="mb-2 grid grid-cols-[1fr_70px_120px_120px_42px] items-center gap-2" key={index}>
-        <input className="field" aria-label={`Line item ${index+1} service`} placeholder="e.g. Website design" value={item.description} onChange={e=>updateLine(index,{description:e.target.value})}/>
-        <input className="field" aria-label={`Line item ${index+1} quantity`} type="number" min="1" value={item.quantity} onChange={e=>updateLine(index,{quantity:Number(e.target.value)})}/>
-        <input className="field" aria-label={`Line item ${index+1} unit price`} placeholder="Enter price" type="number" min="1" value={item.rate||""} onChange={e=>updateLine(index,{rate:Number(e.target.value)})}/>
-        <div className="rounded-lg bg-slate-50 px-3 py-3 text-sm font-bold">{currency(Number(item.quantity)*Number(item.rate),form.currency)}</div>
-        <button aria-label={`Remove line item ${index+1}`} className="btn btn-ghost p-2 text-red-600 disabled:cursor-not-allowed disabled:opacity-30" disabled={form.content.lineItems.length===1} type="button" onClick={()=>content("lineItems",form.content.lineItems.filter((_,i)=>i!==index))}><Trash2 size={16}/></button>
-       </div>)}
-      </div>
-     </div>
-     <Button type="button" variant="secondary" onClick={()=>content("lineItems",[...form.content.lineItems,{description:"",quantity:1,rate:0}])}><Plus size={15}/>Add line item</Button>
-    </div>
-    <Area hint="Set expectations for when the client should pay and when work will begin." label="Payment terms" value={form.content.paymentTerms} onChange={e=>content("paymentTerms",e.target.value)} required/>
-   </div>
-   <aside className="card h-fit space-y-4 p-5">
-    <div><h2 className="text-xl font-black">Proposal summary</h2><p className="muted mt-1 text-xs leading-5">Review the pricing details that will shape the payment request after acceptance.</p></div>
-    <Field hint="Enter the three-letter currency code used for this project, such as NGN, USD, or GBP." label="Currency" value={form.currency} maxLength={3} onChange={e=>setForm({...form,currency:e.target.value.toUpperCase()})}/>
-    <Field hint="Optional: enter the exact amount you want the client to pay before work begins." label="Deposit amount" type="number" min="1" value={form.depositAmount} onChange={e=>setForm({...form,depositAmount:e.target.value,depositPercent:""})}/>
-    <Field hint="Optional: use a percentage instead of a fixed deposit amount. Choose one deposit option only." label="Or deposit percent" type="number" min="1" max="100" value={form.depositPercent} onChange={e=>setForm({...form,depositPercent:e.target.value,depositAmount:""})}/>
-    <Field hint="Optional: choose when the external deposit or payment should be made." label="Payment due date" type="date" value={form.paymentDueDate} onChange={e=>setForm({...form,paymentDueDate:e.target.value})}/>
-    <div className="rounded-lg bg-blue-50 p-4"><span className="muted text-xs">Proposal total</span><p className="mt-1 text-2xl font-black text-primary">{currency(total,form.currency)}</p><p className="mt-2 text-xs leading-5 text-slate-600">Calculated automatically from the quantity and unit price of your line items.</p></div>
-    {(error||pricingError)&&<p className="rounded-lg bg-red-50 p-3 text-sm font-semibold text-red-700">{error||pricingError}</p>}
-    <div><Button className="w-full" disabled={Boolean(pricingError)} type="submit"><Save size={16}/>Save draft</Button><p className="muted mt-2 text-center text-xs leading-5">Save your progress now. You can review the proposal before sending its public link.</p></div>
-   </aside>
-  </div>
- </form>;
-}
 function ProposalDetail() { const {id}=useParams(),qc=useQueryClient(); const {data}=useQuery({queryKey:["proposal",id],queryFn:()=>request<Proposal>(`/proposals/${id}`)}); const [publicUrl,setPublicUrl]=useState(""); if(!data)return <p>Loading...</p>; const send=async()=>{const result=await request<{publicUrl:string}>(`/proposals/${id}/send`,{method:"POST"});setPublicUrl(result.publicUrl);await qc.invalidateQueries({queryKey:["proposal",id]})}; return <><div className="mb-7 flex flex-wrap items-center justify-between gap-3"><div><h1 className="page-title">{data.title}</h1><p className="muted mt-2">{data.client?.name}</p></div><div className="flex gap-2"><Link className="btn btn-secondary" to={`/proposals/${id}/edit`}>Edit</Link><Button onClick={send}>Send proposal</Button></div></div>{publicUrl&&<div className="mb-5 rounded-xl border border-blue-200 bg-blue-50 p-4"><p className="mb-2 text-sm font-bold">Secure public link</p><div className="flex gap-2"><input className="field" readOnly value={publicUrl}/><Button onClick={()=>navigator.clipboard.writeText(publicUrl)}><ClipboardCopy size={16}/></Button></div></div>}<div className="grid gap-6 lg:grid-cols-[1fr_280px]"><div className="card space-y-6 p-7"><h2 className="text-2xl font-black">Project proposal</h2><p>{data.currentVersion?.contentJson.problemSummary}</p><h3 className="font-black">Proposed solution</h3><p>{data.currentVersion?.contentJson.proposedSolution}</p><h3 className="font-black">Deliverables</h3><ul className="list-disc pl-5">{data.currentVersion?.contentJson.deliverables.map(item=><li key={item}>{item}</li>)}</ul></div><aside className="card h-fit space-y-4 p-5"><Badge value={data.status}/><p className="text-3xl font-black">{currency(data.totalAmount,data.currency)}</p><p className="muted text-sm">Deposit: {data.depositAmount?currency(data.depositAmount,data.currency):data.depositPercent?`${data.depositPercent}%`:"Full amount"}</p></aside></div></>; }
 
 function Invoices() { const {data}=useQuery({queryKey:["invoices"],queryFn:()=>request<{items:Invoice[]}>("/payment-requests")}); return <><h1 className="page-title">Invoices</h1><p className="muted mb-7 mt-2">Track external deposit and payment requests.</p>{!data?.items.length?<Empty title="No invoices yet" copy="An invoice is created automatically when a client accepts a proposal."/>:<div className="card table-wrap"><table><thead><tr><th>Request</th><th>Status</th><th>Amount</th><th></th></tr></thead><tbody>{data.items.map(item=><tr key={item.id}><td className="font-bold">{item.title}</td><td><Badge value={item.status}/></td><td>{currency(item.amount,item.currency)}</td><td><Link className="font-bold text-primary" to={`/invoices/${item.id}`}>Review</Link></td></tr>)}</tbody></table></div>}</>; }

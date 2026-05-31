@@ -59,17 +59,15 @@ DATABASE_URL=postgresql://user:password@host:5432/briefpay
 JWT_ACCESS_SECRET=replace_me
 JWT_REFRESH_SECRET=replace_me
 ACCESS_TOKEN_TTL=15m
-REFRESH_TOKEN_TTL=30d
+REFRESH_TOKEN_TTL_DAYS=30
 CORS_ORIGIN=http://localhost:5173
-STORAGE_PROVIDER=supabase
-STORAGE_BUCKET=briefpay-files
-STORAGE_ACCESS_KEY=replace_me
-STORAGE_SECRET_KEY=replace_me
-RESEND_API_KEY=replace_me
-EMAIL_FROM=BriefPay <noreply@briefpay.app>
+PUBLIC_WEB_URL=http://localhost:5173
+UPLOAD_DIR=uploads
 ```
 
 Never commit real `.env` files.
+
+The current MVP implements local private file storage only. Add provider-specific object-storage variables when the S3-compatible adapter is implemented; do not configure unused credentials.
 
 ---
 
@@ -132,6 +130,8 @@ Make sure backend allows CORS from the frontend domain only.
 ---
 
 ## 8. Storage Setup
+
+The local `StorageAdapter` is for development only. Replace it before relying on deployed receipt or logo persistence because common API hosting filesystems may be ephemeral.
 
 Buckets:
 - `briefpay-logos`

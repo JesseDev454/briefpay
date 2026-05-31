@@ -14,6 +14,11 @@ const router = Router();
 router.use(requireAuth);
 
 const subtotalFor = (content: { lineItems: Array<{ quantity: number; rate: number }> }) => content.lineItems.reduce((total, item) => total + item.quantity * item.rate, 0);
+const getOwnedClient = async (id: string, workspaceId: string) => {
+  const client = await AppDataSource.getRepository(Client).findOneBy({ id, workspaceId, archivedAt: IsNull() });
+  if (!client) throw new AppError(404, "NOT_FOUND", "Client not found.");
+  return client;
+};
 const getOwned = async (id: string, workspaceId: string) => {
   const proposal = await AppDataSource.getRepository(Proposal).findOneBy({ id, workspaceId });
   if (!proposal) throw new AppError(404, "NOT_FOUND", "Proposal not found.");
@@ -38,8 +43,7 @@ router.get("/", asyncHandler(async (req, res) => {
 
 router.post("/", asyncHandler(async (req, res) => {
   const input = parse(proposalSchema, req.body);
-  const client = await AppDataSource.getRepository(Client).findOneBy({ id: input.clientId, workspaceId: req.auth!.workspaceId, archivedAt: IsNull() });
-  if (!client) throw new AppError(404, "NOT_FOUND", "Client not found.");
+  const client = await getOwnedClient(input.clientId, req.auth!.workspaceId);
   const subtotal = subtotalFor(input.content);
   const proposal = await AppDataSource.getRepository(Proposal).save({
     workspaceId: req.auth!.workspaceId, clientId: input.clientId, title: input.title, currency: input.currency,
@@ -64,6 +68,7 @@ router.patch("/:id", asyncHandler(async (req, res) => {
   const proposal = await getOwned(parse(uuidSchema, req.params.id), req.auth!.workspaceId);
   if (proposal.status === ProposalStatus.CANCELLED || proposal.status === ProposalStatus.ACCEPTED) throw new AppError(409, "INVALID_STATUS", "This proposal can no longer be edited.");
   const input = parse(proposalSchema, req.body);
+  await getOwnedClient(input.clientId, req.auth!.workspaceId);
   const subtotal = subtotalFor(input.content);
   Object.assign(proposal, { clientId: input.clientId, title: input.title, currency: input.currency, depositAmount: input.depositAmount?.toFixed(2) ?? null, depositPercent: input.depositPercent?.toFixed(2) ?? null, paymentDueDate: input.paymentDueDate || null });
   const version = await saveVersion(proposal, input.content, subtotal);

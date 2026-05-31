@@ -5,6 +5,7 @@ dist/
 !**/.env.example
 coverage/
 apps/api/uploads/
+apps/api/uploads-test/
 *.log
 *.tsbuildinfo
 .DS_Store

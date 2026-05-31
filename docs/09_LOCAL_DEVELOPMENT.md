@@ -10,6 +10,20 @@
 6. Optionally run `npm.cmd run seed`.
 7. Run `npm.cmd run dev`.
 
+## QA commands
+
+The API integration tests use the configured migrated PostgreSQL database. They create isolated records and clean them up after the suite.
+
+```txt
+npm.cmd run migration:run
+npm.cmd run lint
+npm.cmd run typecheck
+npm.cmd test
+npm.cmd run build
+```
+
+Use `docs/10_SPRINT_2_QA.md` for the manual desktop and mobile browser checklist.
+
 ## Deployment shape
 
 - Deploy `apps/web` to Vercel with `VITE_API_URL`.

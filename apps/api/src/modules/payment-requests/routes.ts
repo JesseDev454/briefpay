@@ -102,6 +102,7 @@ publicPaymentRouter.post("/:token/confirm", asyncHandler(async (req, res) => {
   const input = parse(paymentConfirmationSchema, req.body);
   const { paymentRequest } = await getPublic(req.params.token);
   if (paymentRequest.status === PaymentRequestStatus.PAID) throw new AppError(409, "INVALID_STATUS", "This payment request is already verified.");
+  if (paymentRequest.status === PaymentRequestStatus.AWAITING_VERIFICATION) throw new AppError(409, "INVALID_STATUS", "A confirmation is already awaiting freelancer review.");
   if (input.receiptFileId) {
     const file = await AppDataSource.getRepository(StoredFile).findOneBy({ id: input.receiptFileId, workspaceId: paymentRequest.workspaceId });
     if (!file) throw new AppError(400, "INVALID_FILE", "Receipt file is unavailable.");
